@@ -40,17 +40,18 @@ const int GRAPHWIDTH = 1000; //в логических единицах
 
 
 inline BOOL AreInLine(struct dot, struct dot, struct dot ); //алгоритм определения, лежат ли 3 точки на одной прямой,
-//основывается на уравнении прямой по двум точкам. Находится разность правой и левой частей +1, 
-//полученное значение, уменьшенное на единицу, сравнивается с машинным нулем.  
+//основывается на уравнении прямой по двум точкам. Находится разность правой и левой частей 
+//полученное значение сравнивается с машинным нулем.  
 //Аргументы - три структуры с координатами х и у. 
-void DrawPoint(HDC, struct dot, double, double, dot *, int *, HPEN, HBRUSH, double, double, double, double, double, double, LPWSTR*); // аргументы: окно, где рисуется, структура с координатами точки, коэффициенты перевода
+
+void DrawPoint(HDC, struct dot, double, double, dot *, int *, HPEN, HBRUSH, double, double, double, double, double, double,vector<string>); // аргументы: окно, где рисуется, структура с координатами точки, коэффициенты перевода
 //координаты точки из файла на размер окна (2), указатель на массив, хранящий последнюю построенную точку для каждого графика, массив флагов,
 //показывающих, построена ли хотя бы первая точка этого графика или нет
-int ReadFile(TCHAR *, vector <dot>&, int&, vector<string>&); // путь к файлу, вектор для хранения точек, количество графиков, вектор имен графиков
+int ReadFile(TCHAR *, vector <dot>&, int&, vector<string>&); // путь к файлу, вектор для хранения точек, количество графиков
 BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot>, RECT, int, HPEN, HBRUSH, int, int, vector<string>); // окно, окно, вектор с точками, структура из оконной процедуры дочернего окна, число графиков
 
 
-int ReadFile(TCHAR *PathName, vector <dot>& points_vec, int& quant, vector<string>& names) {
+int ReadFile(TCHAR *PathName, vector <dot>& points_vec, int& quant, vector<string>&names) {
 
 	char str[20];
 	double tmp_x = 0.0, tmp_y = 0.0;
@@ -70,12 +71,11 @@ int ReadFile(TCHAR *PathName, vector <dot>& points_vec, int& quant, vector<strin
 		dots[i] = new dot[3];
 	}
 
-	char name[20];
 	for (int i = 0; i != quant; i++) {
-		fscanf(f_in, "%s", name);
-		names.push_back(name);
+		fscanf(f_in, "%s", str);
+		names.push_back(str);
 	}
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	while (!feof(f_in)) {
 		if (first) {
 			for (int i = 0; i != 2; i++) { //reading of first two points
@@ -189,7 +189,7 @@ inline BOOL AreInLine(struct dot one, struct dot two, struct dot three) {
 	else return (FALSE);
 }
 
-BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, HPEN pen, HBRUSH brush, int sx, int sy,vector<string> names ) {
+BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, HPEN pen, HBRUSH brush, int sx, int sy, vector<string> names) {
 	
 	dot *points = new dot[quantity];
 	int *flag = new int[quantity];
@@ -251,7 +251,7 @@ BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, 
 	//}
 ////////////////////////////////////////////////////////////////////////////
 	for (vector <dot> ::iterator i = vec.begin(); i != vec.end(); i++) {
-		DrawPoint(hdc, (*i), k_x, k_y, points, flag, pen, brush, max_x, min_x, max_y, min_y, hx, hy,lpnames);
+		DrawPoint(hdc, (*i), k_x, k_y, points, flag, pen, brush, max_x, min_x, max_y, min_y, hx, hy,names);
 	}
 	delete[] flag;
 	delete[] points;
@@ -259,21 +259,21 @@ BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, 
 	return (TRUE);
 }
 
-void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int *flag, HPEN pen, HBRUSH brush, double max_x, double min_x, double max_y, double min_y,double hx, double hy,LPWSTR *lpnames) {
+void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int *flag, HPEN pen, HBRUSH brush, double max_x, double min_x, double max_y, double min_y,double hx, double hy, vector<string> names) {
 	
 	//рисуем точку
-	//двигаем перо в неё, рисуем линию от нее до последней нарисованной точки этого графика цветом, зависящим от номера графика, если эта точка есть, конечно
+	//двигаем перо в неё, рисуем линию от нее до последней нарисованной точки этого графика цветом, зависящим от номера графика, если эта точка есть
 	//пишем в массив эту точку
-	
 	//flag=0, если ни одной точки этого графика ещё не было нарисовано
 	
 
 ///////////////////draw the rectangle for point/////////////////////////////
 	pen = CreatePen(PS_DASHDOTDOT, 7, RGB(120, (11+40*point.num%243), 15));
-	brush = CreateSolidBrush(RGB(120, (11 + 40 * point.num % 243), 15));
+	//brush = CreateSolidBrush(RGB(120, (11 + 40 * point.num % 243), 15));
+	brush = CreateSolidBrush(RGB((170 * point.num % 235), (170 * point.num % 235), (170 * point.num % 235)));
 	SelectObject(hdc, pen);
 	SelectObject(hdc, brush);
-	RECT r, name;
+	RECT r, namequad;
 	SetRect(&r, (int)((point.x - min_x)*GRAPHWIDTH / hx + 0.5)-5, (int)((point.y - min_y)*GRAPHWIDTH / hy + 0.5)-5, (int)((point.x - min_x)*GRAPHWIDTH / hx + 0.5)+5, (int)((point.y - min_y)*GRAPHWIDTH / hy + 0.5) + 5);
 	FillRect(hdc, &r, brush);
 	SetPixel(hdc, (int)((point.x-min_x)*GRAPHWIDTH/hx+0.5),(int) ((point.y-min_y)*GRAPHWIDTH/hy+0.5), RGB((200 * point.num %235 +20), (200 * point.num %255 +20), (200 * point.num %235+20)));
@@ -288,9 +288,10 @@ void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int 
 	}
 	else {
 		flag[point.num] = 1;
-		//SetRect(&name, 10 * point.num - 7, indent / 2, 10 * point.num + 7, indent / 2 + 7);
-		//FillRect(hdc, &name, brush);
-		//TextOut(hdc, 10 * point.num + 10, indent / 2, lpnames[point.num], _tcslen(lpnames[point.num]));
+		SetRect(&namequad, point.num * 30 + 10, GRAPHWIDTH - 30, point.num * 30 + 20, GRAPHWIDTH - 40);
+		FillRect(hdc, &namequad, brush);
+		SetTextAlign(hdc, TA_RIGHT | TA_TOP);
+		TextOut(hdc, (int)point.num * 30 + 25, (int)(GRAPHWIDTH - 35), (LPWSTR)names[point.num].c_str(), names[point.num].length());
 	}
 		mas[point.num] = point;
 	};
