@@ -49,6 +49,7 @@ void DrawPoint(HDC, struct dot, double, double, dot *, int *, HPEN, HBRUSH, doub
 int ReadFile(TCHAR *, vector <dot>&, int&, vector<string>&); // путь к файлу, вектор для хранения точек, количество графиков
 BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot>, RECT, int, HPEN, HBRUSH, int, int, vector<string>); // окно, окно, вектор с точками, структура из оконной процедуры дочернего окна, число графиков
 void ProceedNames(HDC, HPEN, HBRUSH,vector<string>, int);
+void DrawGrid(HDC, int, int, double, double, double, double, double, double);
 
 int ReadFile(TCHAR *PathName, vector <dot>& points_vec, int& quant, vector<string>&names) {
 
@@ -189,20 +190,17 @@ inline BOOL AreInLine(struct dot one, struct dot two, struct dot three) {
 }
 
 BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, HPEN pen, HBRUSH brush, int sx, int sy, vector<string> names) {
-	
+	double max_x, min_x, max_y, min_y, hx, hy;
+	double k_x = 1.0, k_y = 1.0;
 	dot *points = new dot[quantity];
 	int *flag = new int[quantity];
+
 	for (int i = 0; i != quantity; i++) { //нужно для определения заполненности массива с последней точкой/ 0 - ни одной точки графика не нарисовано
 		flag[i] = 0;
 	}
 
-	double max_x, min_x, max_y, min_y, hx, hy;
-	double k_x = 1.0, k_y = 1.0;
-	
-	max_x = vec[0].x;
-	max_y = vec[0].y;
-	min_x = vec[0].x;
-	min_y = vec[0].x;
+	max_x = vec[0].x; max_y = vec[0].y;
+	min_x = vec[0].x; min_y = vec[0].x;
 
 	for (vector <dot> :: iterator i = vec.begin(); i != vec.end(); i++) {
 		if ((*i).x > max_x) max_x = (*i).x;
@@ -213,43 +211,17 @@ BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, 
 		
 	hx = max_x - min_x;
 	hy = max_y - min_y;
-
-///////////////////draw the grid////////////////////////////////////////////
-	SetMapMode(hdc, MM_ANISOTROPIC);
-	SetWindowExtEx(hdc, GRAPHSIZE, -GRAPHSIZE, NULL);
-	SetViewportExtEx(hdc, sx, sy, NULL);
-	SetViewportOrgEx(hdc, 2 * indent, sy - indent, NULL);
-	SetTextAlign(hdc, TA_RIGHT | TA_TOP);
-	int x_gr, y_gr, i;
-	TCHAR s[20];
-	double grid_x, grid_y;
-	for ( grid_x= min_x, i = 0; i <= scaleX; grid_x += hx / scaleX, i++) {
-		x_gr = (int)((grid_x - min_x)*GRAPHWIDTH / (max_x - min_x) + 0.5);
-		_stprintf(s, _TEXT("%.1lf"), grid_x);
-		TextOut(hdc, x_gr, 0, s, _tcsclen(s));
-		MoveToEx(hdc, x_gr, -10, NULL);
-		LineTo(hdc, x_gr, 10);
-	}
-	MoveToEx(hdc, 0, 0, NULL);
-	LineTo(hdc, GRAPHWIDTH, 0);
-	SetTextAlign(hdc, TA_RIGHT | TA_BOTTOM);
-	for (grid_y = min_y, i = 0; i <= scaleY; grid_y += hy / scaleY, i++) {
-		y_gr = (int)((grid_y - min_y)*GRAPHWIDTH / (max_y - min_y) + 0.5);
-		_stprintf(s, _TEXT("%.1lf"), grid_y);
-		TextOut(hdc, 0, y_gr, s, _tcsclen(s));
-		MoveToEx(hdc, -10, y_gr, NULL);
-		LineTo(hdc, 10, y_gr);
-	}
-	MoveToEx(hdc, 0, 0, NULL);
-	LineTo(hdc, 0, GRAPHWIDTH);
+	
+	DrawGrid(hdc, sx, sy, max_x, min_x, max_y, min_y, hx, hy);
 
 	for (vector <dot> ::iterator i = vec.begin(); i != vec.end(); i++) {
 		DrawPoint(hdc, (*i), k_x, k_y, points, flag, pen, brush, max_x, min_x, max_y, min_y, hx, hy,names);
 	}
+
 	ProceedNames(hdc, pen, brush, names, quantity);
+
 	delete[] flag;
 	delete[] points;
-	//delete[] lpnames;
 	return (TRUE);
 }
 
@@ -304,6 +276,39 @@ void ProceedNames(HDC hdc, HPEN pen, HBRUSH brush,vector<string> names, int quan
 		std::mbstowcs(des, names[i].c_str(), names[i].length());
 		LPCWSTR lpcwstr = des;
 		////////////////////////////////////////////////////////////////////////////
-		TextOut(hdc, (int)i * 100 + 25, (int)(GRAPHWIDTH - 35), lpcwstr, names[i].length());
+		TextOut(hdc, (int)i * 100 + 30, (int)(GRAPHWIDTH - 35), lpcwstr, names[i].length());
 	}
+}
+
+void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y, double min_y, double hx, double hy) {
+	
+	SetMapMode(hdc, MM_ANISOTROPIC);
+	SetWindowExtEx(hdc, GRAPHSIZE, -GRAPHSIZE, NULL);
+	SetViewportExtEx(hdc, sx, sy, NULL);
+	SetViewportOrgEx(hdc, 3 * indent, sy - indent, NULL);
+	SetTextAlign(hdc, TA_CENTER | TA_TOP);
+	int x_gr, y_gr, i;
+	TCHAR s[20];
+	double grid_x, grid_y;
+	for (grid_x = min_x, i = 0; i <= scaleX; grid_x += hx / scaleX, i++) {
+		x_gr = (int)((grid_x - min_x)*GRAPHWIDTH / (max_x - min_x) + 0.5);
+		_stprintf(s, _TEXT("%.1le"), grid_x);
+		TextOut(hdc, x_gr, 0, s, _tcsclen(s));
+		MoveToEx(hdc, x_gr, -10, NULL);
+		LineTo(hdc, x_gr, 10);
+		LineTo(hdc, x_gr, GRAPHWIDTH);
+	}
+	MoveToEx(hdc, 0, 0, NULL);
+	LineTo(hdc, GRAPHWIDTH, 0);
+	SetTextAlign(hdc, TA_RIGHT | TA_BOTTOM);
+	for (grid_y = min_y, i = 0; i <= scaleY; grid_y += hy / scaleY, i++) {
+		y_gr = (int)((grid_y - min_y)*GRAPHWIDTH / (max_y - min_y) + 0.5);
+		_stprintf(s, _TEXT("%.1le"), grid_y);
+		TextOut(hdc, 0, y_gr, s, _tcsclen(s));
+		MoveToEx(hdc, -10, y_gr, NULL);
+		LineTo(hdc, 10, y_gr);
+		LineTo(hdc, GRAPHWIDTH, y_gr);
+	}
+	MoveToEx(hdc, 0, 0, NULL);
+	LineTo(hdc, 0, GRAPHWIDTH);
 }
