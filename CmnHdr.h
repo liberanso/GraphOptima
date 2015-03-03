@@ -22,7 +22,6 @@ Purpose: Common header file containing handy macros and definitions
 
 ///////////////////////// Include Windows Definitions /////////////////////////
 
-
 #pragma warning(push, 3)
 #include <Windows.h>
 #include <windowsx.h>
