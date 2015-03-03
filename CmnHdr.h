@@ -19,10 +19,7 @@ Purpose: Common header file containing handy macros and definitions
 #define _WIN32_WINNT 0x0500
 //#define WINVER       0x0500
 
-
 ///////////////////////// Include Windows Definitions /////////////////////////
-
-
 #pragma warning(push, 3)
 #include <Windows.h>
 #include <windowsx.h>
