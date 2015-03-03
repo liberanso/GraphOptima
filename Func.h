@@ -186,8 +186,6 @@ inline BOOL AreInLine(struct dot one, struct dot two, struct dot three) {
 	double comp3 = k*three.x + b;
 	if (fabs(comp1 - comp2) <= pow(10.0,3.0)*DBL_EPSILON*fmax(comp1, comp2)) return (TRUE); 
 	else if (fabs(three.y - comp3) <= pow(10.0,3.0)*DBL_EPSILON*fmax(three.y, comp3)) return (TRUE);
-	//if (fabs((three.x - one.x)*(two.y - one.y) - (three.y - one.y)*(two.x - one.x)) <= DBL_EPSILON*fmax(comp1, comp2)) return (TRUE);
-	//else if (fabs(three.y - (one.y - two.y) / (one.x - two.x)*three.x + (one.y - ((one.y - two.y) / (one.x - two.x)*one.x))) <= DBL_EPSILON*fmax(three.y, comp3))return (TRUE);
 	else return (FALSE);
 }
 
@@ -245,13 +243,7 @@ BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, 
 	}
 	MoveToEx(hdc, 0, 0, NULL);
 	LineTo(hdc, 0, GRAPHWIDTH);
-///////////////proceed the names////////////////////////////////////////////
-//LPWSTR * lpnames = new LPWSTR[quantity];
-	//int len=0;
-	//for (int i = 0; i != quantity; i++) {
-	//	MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS, names[i].c_str(), -1, lpnames[i], names[i].length());
-	//}
-////////////////////////////////////////////////////////////////////////////
+
 	for (vector <dot> ::iterator i = vec.begin(); i != vec.end(); i++) {
 		DrawPoint(hdc, (*i), k_x, k_y, points, flag, pen, brush, max_x, min_x, max_y, min_y, hx, hy);
 	}
@@ -290,10 +282,7 @@ void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int 
 	}
 	else {
 		flag[point.num] = 1;
-		//SetRect(&name, 10 * point.num - 7, indent / 2, 10 * point.num + 7, indent / 2 + 7);
-		//FillRect(hdc, &name, brush);
-		//TextOut(hdc, 10 * point.num + 10, indent / 2, lpnames[point.num], _tcslen(lpnames[point.num]));
-	}
+	 }
 		mas[point.num] = point;
 	};
 
