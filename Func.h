@@ -174,6 +174,7 @@ int ReadFile(TCHAR *PathName, vector <dot>& points_vec, int& quant, vector<strin
 			}
 		}
 	}
+	return quant;
 }
 
 inline BOOL AreInLine(struct dot one, struct dot two, struct dot three) {
@@ -281,7 +282,9 @@ void ProceedNames(HDC hdc, HPEN pen, HBRUSH brush,vector<string> names, int quan
 }
 
 void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y, double min_y, double hx, double hy) {
-	
+	HPEN pengrid;
+	pengrid= CreatePen(PS_DASH, 3, RGB(120, 30, 50));
+	SelectObject(hdc,pengrid);
 	SetMapMode(hdc, MM_ANISOTROPIC);
 	SetWindowExtEx(hdc, GRAPHSIZE, -GRAPHSIZE, NULL);
 	SetViewportExtEx(hdc, sx, sy, NULL);
@@ -294,10 +297,16 @@ void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y,
 		x_gr = (int)((grid_x - min_x)*GRAPHWIDTH / (max_x - min_x) + 0.5);
 		_stprintf(s, _TEXT("%.1le"), grid_x);
 		TextOut(hdc, x_gr, 0, s, _tcsclen(s));
+		pengrid = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
+		SelectObject(hdc, pengrid);
 		MoveToEx(hdc, x_gr, -10, NULL);
 		LineTo(hdc, x_gr, 10);
+		pengrid = CreatePen(PS_DASH, 1, RGB(120, 30, 50));
+		SelectObject(hdc, pengrid);
 		LineTo(hdc, x_gr, GRAPHWIDTH);
 	}
+	pengrid = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
+	SelectObject(hdc, pengrid);
 	MoveToEx(hdc, 0, 0, NULL);
 	LineTo(hdc, GRAPHWIDTH, 0);
 	SetTextAlign(hdc, TA_RIGHT | TA_BOTTOM);
@@ -305,10 +314,17 @@ void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y,
 		y_gr = (int)((grid_y - min_y)*GRAPHWIDTH / (max_y - min_y) + 0.5);
 		_stprintf(s, _TEXT("%.1le"), grid_y);
 		TextOut(hdc, 0, y_gr, s, _tcsclen(s));
+		pengrid = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
+		SelectObject(hdc, pengrid);
 		MoveToEx(hdc, -10, y_gr, NULL);
 		LineTo(hdc, 10, y_gr);
+		pengrid = CreatePen(PS_DASH, 1, RGB(120, 30, 50));
+		SelectObject(hdc, pengrid);
 		LineTo(hdc, GRAPHWIDTH, y_gr);
 	}
+	pengrid = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
+	SelectObject(hdc, pengrid);
 	MoveToEx(hdc, 0, 0, NULL);
 	LineTo(hdc, 0, GRAPHWIDTH);
+	DeleteObject(pengrid);
 }
