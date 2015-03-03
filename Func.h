@@ -40,17 +40,18 @@ const int GRAPHWIDTH = 1000; //в логических единицах
 
 
 inline BOOL AreInLine(struct dot, struct dot, struct dot ); //алгоритм определения, лежат ли 3 точки на одной прямой,
-//основывается на уравнении прямой по двум точкам. Находится разность правой и левой частей +1, 
-//полученное значение, уменьшенное на единицу, сравнивается с машинным нулем.  
+//основывается на уравнении прямой по двум точкам. Находится разность правой и левой частей 
+//полученное значение сравнивается с машинным нулем.  
 //Аргументы - три структуры с координатами х и у. 
-void DrawPoint(HDC, struct dot, double, double, dot *, int *, HPEN, HBRUSH, double, double, double, double, double, double, LPWSTR*); // аргументы: окно, где рисуется, структура с координатами точки, коэффициенты перевода
+
+void DrawPoint(HDC, struct dot, double, double, dot *, int *, HPEN, HBRUSH, double, double, double, double, double, double); // аргументы: окно, где рисуется, структура с координатами точки, коэффициенты перевода
 //координаты точки из файла на размер окна (2), указатель на массив, хранящий последнюю построенную точку для каждого графика, массив флагов,
 //показывающих, построена ли хотя бы первая точка этого графика или нет
-int ReadFile(TCHAR *, vector <dot>&, int&, vector<string>&); // путь к файлу, вектор для хранения точек, количество графиков, вектор имен графиков
-BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot>, RECT, int, HPEN, HBRUSH, int, int, vector<string>); // окно, окно, вектор с точками, структура из оконной процедуры дочернего окна, число графиков
+int ReadFile(TCHAR *, vector <dot>&, int&); // путь к файлу, вектор для хранения точек, количество графиков
+BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot>, RECT, int, HPEN, HBRUSH, int, int); // окно, окно, вектор с точками, структура из оконной процедуры дочернего окна, число графиков
 
 
-int ReadFile(TCHAR *PathName, vector <dot>& points_vec, int& quant, vector<string>& names) {
+int ReadFile(TCHAR *PathName, vector <dot>& points_vec, int& quant) {
 
 	char str[20];
 	double tmp_x = 0.0, tmp_y = 0.0;
@@ -70,12 +71,13 @@ int ReadFile(TCHAR *PathName, vector <dot>& points_vec, int& quant, vector<strin
 		dots[i] = new dot[3];
 	}
 
-	char name[20];
+	char **ptr = new char*[quant];
 	for (int i = 0; i != quant; i++) {
-		fscanf(f_in, "%s", name);
-		names.push_back(name);
+		//here it'll be great to allocate the bulk of memory not longer than the names of graphics and not 10 chars always. Think of it.
+		ptr[i] = new char[10];
+		fscanf(f_in, "%s", ptr[i]);
 	}
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	while (!feof(f_in)) {
 		if (first) {
 			for (int i = 0; i != 2; i++) { //reading of first two points
@@ -189,7 +191,7 @@ inline BOOL AreInLine(struct dot one, struct dot two, struct dot three) {
 	else return (FALSE);
 }
 
-BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, HPEN pen, HBRUSH brush, int sx, int sy,vector<string> names ) {
+BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, HPEN pen, HBRUSH brush, int sx, int sy) {
 	
 	dot *points = new dot[quantity];
 	int *flag = new int[quantity];
@@ -251,7 +253,7 @@ BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, 
 	//}
 ////////////////////////////////////////////////////////////////////////////
 	for (vector <dot> ::iterator i = vec.begin(); i != vec.end(); i++) {
-		DrawPoint(hdc, (*i), k_x, k_y, points, flag, pen, brush, max_x, min_x, max_y, min_y, hx, hy,lpnames);
+		DrawPoint(hdc, (*i), k_x, k_y, points, flag, pen, brush, max_x, min_x, max_y, min_y, hx, hy);
 	}
 	delete[] flag;
 	delete[] points;
@@ -259,7 +261,7 @@ BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, 
 	return (TRUE);
 }
 
-void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int *flag, HPEN pen, HBRUSH brush, double max_x, double min_x, double max_y, double min_y,double hx, double hy,LPWSTR *lpnames) {
+void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int *flag, HPEN pen, HBRUSH brush, double max_x, double min_x, double max_y, double min_y,double hx, double hy) {
 	
 	//рисуем точку
 	//двигаем перо в неё, рисуем линию от нее до последней нарисованной точки этого графика цветом, зависящим от номера графика, если эта точка есть, конечно
@@ -273,7 +275,7 @@ void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int 
 	brush = CreateSolidBrush(RGB(120, (11 + 40 * point.num % 243), 15));
 	SelectObject(hdc, pen);
 	SelectObject(hdc, brush);
-	RECT r, name;
+	RECT r;
 	SetRect(&r, (int)((point.x - min_x)*GRAPHWIDTH / hx + 0.5)-5, (int)((point.y - min_y)*GRAPHWIDTH / hy + 0.5)-5, (int)((point.x - min_x)*GRAPHWIDTH / hx + 0.5)+5, (int)((point.y - min_y)*GRAPHWIDTH / hy + 0.5) + 5);
 	FillRect(hdc, &r, brush);
 	SetPixel(hdc, (int)((point.x-min_x)*GRAPHWIDTH/hx+0.5),(int) ((point.y-min_y)*GRAPHWIDTH/hy+0.5), RGB((200 * point.num %235 +20), (200 * point.num %255 +20), (200 * point.num %235+20)));
