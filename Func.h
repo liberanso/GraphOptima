@@ -35,7 +35,6 @@ const int scaleY = 6;
 const int indent = 25; //отступ
 const int GRAPHSIZE = 1200; //размеры окна
 const int GRAPHWIDTH = 1000; //в логических единицах
-
 //////////////////////////////////////////////////////////////////////
 
 
@@ -49,7 +48,7 @@ void DrawPoint(HDC, struct dot, double, double, dot *, int *, HPEN, HBRUSH, doub
 //показывающих, построена ли хотя бы первая точка этого графика или нет
 int ReadFile(TCHAR *, vector <dot>&, int&, vector<string>&); // путь к файлу, вектор для хранения точек, количество графиков
 BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot>, RECT, int, HPEN, HBRUSH, int, int, vector<string>); // окно, окно, вектор с точками, структура из оконной процедуры дочернего окна, число графиков
-
+void ProceedNames(HDC, HPEN, HBRUSH,vector<string>, int);
 
 int ReadFile(TCHAR *PathName, vector <dot>& points_vec, int& quant, vector<string>&names) {
 
@@ -243,16 +242,11 @@ BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, 
 	}
 	MoveToEx(hdc, 0, 0, NULL);
 	LineTo(hdc, 0, GRAPHWIDTH);
-///////////////proceed the names////////////////////////////////////////////
-//LPWSTR * lpnames = new LPWSTR[quantity];
-	//int len=0;
-	//for (int i = 0; i != quantity; i++) {
-	//	MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS, names[i].c_str(), -1, lpnames[i], names[i].length());
-	//}
-////////////////////////////////////////////////////////////////////////////
+
 	for (vector <dot> ::iterator i = vec.begin(); i != vec.end(); i++) {
 		DrawPoint(hdc, (*i), k_x, k_y, points, flag, pen, brush, max_x, min_x, max_y, min_y, hx, hy,names);
 	}
+	ProceedNames(hdc, pen, brush, names, quantity);
 	delete[] flag;
 	delete[] points;
 	//delete[] lpnames;
@@ -273,7 +267,7 @@ void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int 
 	brush = CreateSolidBrush(RGB((170 * point.num % 235), (170 * point.num % 235), (170 * point.num % 235)));
 	SelectObject(hdc, pen);
 	SelectObject(hdc, brush);
-	RECT r, namequad;
+	RECT r;
 	SetRect(&r, (int)((point.x - min_x)*GRAPHWIDTH / hx + 0.5)-5, (int)((point.y - min_y)*GRAPHWIDTH / hy + 0.5)-5, (int)((point.x - min_x)*GRAPHWIDTH / hx + 0.5)+5, (int)((point.y - min_y)*GRAPHWIDTH / hy + 0.5) + 5);
 	FillRect(hdc, &r, brush);
 	SetPixel(hdc, (int)((point.x-min_x)*GRAPHWIDTH/hx+0.5),(int) ((point.y-min_y)*GRAPHWIDTH/hy+0.5), RGB((200 * point.num %235 +20), (200 * point.num %255 +20), (200 * point.num %235+20)));
@@ -288,12 +282,28 @@ void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int 
 	}
 	else {
 		flag[point.num] = 1;
-		SetRect(&namequad, point.num * 30 + 10, GRAPHWIDTH - 30, point.num * 30 + 20, GRAPHWIDTH - 40);
-		FillRect(hdc, &namequad, brush);
-		SetTextAlign(hdc, TA_RIGHT | TA_TOP);
-		TextOut(hdc, (int)point.num * 30 + 25, (int)(GRAPHWIDTH - 35), (LPWSTR)names[point.num].c_str(), names[point.num].length());
 	}
 		mas[point.num] = point;
 	};
 
-
+void ProceedNames(HDC hdc, HPEN pen, HBRUSH brush,vector<string> names, int quantity) {
+	for (int i = 0; i != quantity; i++) {
+		brush = CreateSolidBrush(RGB(200,10,11));
+		SelectObject(hdc, brush);
+		///////////////proceed the names////////////////////////////////////////////
+		RECT namequad;
+		SetRect(&namequad, i * 100 + 4, GRAPHWIDTH - 22, i * 100 + 28, GRAPHWIDTH - 48);
+		FillRect(hdc, &namequad, brush);
+		brush = CreateSolidBrush(RGB((170 * i % 235), (170 * i % 235), (170 * i % 235)));
+		SelectObject(hdc, brush);
+		SetRect(&namequad, i * 100 + 8, GRAPHWIDTH - 28, i * 100 + 22, GRAPHWIDTH - 42);
+		FillRect(hdc, &namequad, brush);
+		SetTextAlign(hdc, TA_LEFT | TA_TOP);
+		
+		wchar_t des[10];
+		std::mbstowcs(des, names[i].c_str(), names[i].length());
+		LPCWSTR lpcwstr = des;
+		////////////////////////////////////////////////////////////////////////////
+		TextOut(hdc, (int)i * 100 + 25, (int)(GRAPHWIDTH - 35), lpcwstr, names[i].length());
+	}
+}
