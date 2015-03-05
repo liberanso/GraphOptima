@@ -7,6 +7,9 @@ Noticies: 09.01.2015
 #include "CmnHdr.h"
 #include "Func.h"
 
+
+
+
 TCHAR szPathname[MAX_PATH]; // path to the file
 
 /////////////////////plot wnd////////////////////////////////////////
@@ -127,9 +130,8 @@ LRESULT CALLBACK WndGraph(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	switch (message) {
 	case WM_CREATE:
-		if (!points.empty())points.clear(); //чистим вектор с точками для построения
 		if (!ReadFile(szPathname, points, quant, names)) {
-			chMB("Cannot read the file. Please, try again. =(((");
+			chMB("Cannot read the file. Please, try again.");
 			DestroyWindow(hWnd);
 			return 12;
 		}
@@ -138,11 +140,15 @@ LRESULT CALLBACK WndGraph(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 		sx = LOWORD(lParam);
 		sy = HIWORD(lParam);
+		InvalidateRect(hWnd, NULL, TRUE);
+		//UpdateWindow(hWnd);
+		//RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+		return 0;
 		break;
 
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-		DrawGraphics(hWnd, hdc, points, rect, quant, hline, hrect, sx, sy,names);
+		DrawGraphics(hWnd, hdc, points, rect, quant, hline, hrect, sx, sy, names);
 		EndPaint(hWnd, &ps);
 		break;
 	
