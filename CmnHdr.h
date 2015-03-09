@@ -19,7 +19,10 @@ Purpose: Common header file containing handy macros and definitions
 #define _WIN32_WINNT 0x0500
 //#define WINVER       0x0500
 
+
 ///////////////////////// Include Windows Definitions /////////////////////////
+
+
 #pragma warning(push, 3)
 #include <Windows.h>
 #include <windowsx.h>
@@ -64,6 +67,7 @@ Purpose: Common header file containing handy macros and definitions
 //
 #pragma warning(disable:4127) //conditional expression is constant
 //
+#pragma warning(disable:4189) //local variable is initialized but not referenced
 
 ///////////////////////// Pragma message helper macro /////////////////////////
 
@@ -108,7 +112,7 @@ You can easily jump directly to this line and examine the surrounding code.
 // I created this macro to perform the casting.
 typedef unsigned (__stdcall *PTHREAD_START) (void *);
 
-#define chBEGINTHREADEX(psa, cbStack, pfnStartAddr, \
+#define _mbeginthreadex(psa, cbStack, pfnStartAddr, \
    pvParam, fdwCreate, pdwThreadId)                 \
       ((HANDLE)_beginthreadex(                      \
          (void *)        (psa),                     \
