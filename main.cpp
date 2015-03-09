@@ -1,14 +1,14 @@
-/**********************************************************************************
-Version: 1.0.1
+/*************************************************************************************************************************************************************
+Version: 3.0.1
 Author: Mariya Zapletina
-Noticies: 09.01.2015
-***********************************************************************************/
+Noticies: 09/03/15
+**************************************************************************************************************************************************************/
 #include "resource.h"
 #include "CmnHdr.h"
 #include "Func.h"
 //#include "macros.h"
 
-///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TCHAR szGraphWndClass[] = _TEXT("GraphClass");
 HINSTANCE hInst;
 TCHAR szTitle[] = _TEXT("Win32");
@@ -20,7 +20,7 @@ BOOL Dlg_OnInitDialog(HWND, HWND, LPARAM);
 void Dlg_OnCommand(HWND, int, HWND, UINT);
 void Dlg_OnClose(HWND);
 DWORD WINAPI ParseThread(PVOID);
-/////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 vector <dot> points; //vector for optimized dots from file
 int quant = 0; // quantity of graphics
 vector <string> names;
@@ -35,9 +35,9 @@ int quantOfread = 0; //количество считанных из файла �
 BOOL ShutUp = FALSE; //флаг, устанавливаемый родительским процессом
 //свидетельствует о том, что чайлд поток должен прекратиться
 dot **dots;
-////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/////////////////enter point func////////////////////////////////////////////////
+/////////////////enter point func////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int WINAPI _tWinMain(HINSTANCE hInstance,	HINSTANCE,	LPTSTR lpCmdLine,	int) {
 	InitCommonControls(); //this is to enable windows visual styles
 
@@ -62,7 +62,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance,	HINSTANCE,	LPTSTR lpCmdLine,	int) {
 	CloseHandle(parseThread);
 	return (0);
 } 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ATOM RegisterGraphClass() {
 	WNDCLASSEX wgex = { 0 }; //Wnd Graph EX
@@ -76,7 +76,8 @@ ATOM RegisterGraphClass() {
 	wgex.hIconSm = LoadIcon(hInst, MAKEINTRESOURCE(IDI_ICON2));
 	return RegisterClassEx(&wgex);
 }
-////////////////enter point func mainproc///////////////////////////////////////
+
+////////////////enter point func mainproc//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 INT_PTR WINAPI MainDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg) {
 
@@ -90,7 +91,7 @@ INT_PTR WINAPI MainDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	}
 	return(FALSE);
 }
-//////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Dlg_OnClose(HWND hwnd) {
 	if (MessageBox(hwnd, _TEXT("Вы хотите завершить программу?"), _TEXT("Завершение работы"), MB_ICONQUESTION | MB_YESNO) == IDYES) {
 		SetEvent(parseEnd);
@@ -143,7 +144,7 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 	case IDC_PLOT:
 	{
 		GetDlgItemText(hwnd, IDC_FILENAME, szPathname, chDIMOF(szPathname));
-		//////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		char str[20];
 		FILE *f_in = _tfopen((const TCHAR *)szPathname, _TEXT("r"));
 		if (f_in == NULL) {
@@ -165,13 +166,17 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 				return;
 			}
 		}
+		dots = new dot*[quant]; //array to save three last dots of each graphic
+		for (int i = 0; i != quant; i++) {
+			dots[i] = new dot[3];
+		}
 
 		while (!feof(f_in)) {
 			int ch = 0;
 			buf.resize(0); //затираем содержимое вектора, которое было считано из файла на прошлой итерации
 			while ((!feof(f_in)) && (ch < (10 * (quant + 1)))) { //читаем массивом по 50 точек
 
-				if (fscanf(f_in, "%s", str) != 0) {
+				if ((fscanf(f_in, "%s", str) != 0)&&(!feof(f_in)&&(!ferror(f_in)))) {
 					buf.push_back(str);
 					ch++;
 					quantOfread = ch;
@@ -184,7 +189,7 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 		if (feof(f_in)) ShutUp = TRUE;
 		SetEvent(parseEvent);
 		WaitForSingleObject(parseEnd, INFINITE);
-		//////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if (IsWindow(hGraph)) break;
 		RegisterGraphClass();
 		hGraph = CreateWindow(szGraphWndClass, _TEXT("Plot"), WS_SYSMENU | WS_POPUP | WS_VISIBLE | WS_THICKFRAME | WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, 700, 700, hwnd, 0, hInst, NULL);
@@ -239,18 +244,14 @@ DWORD WINAPI ParseThread(PVOID pvParam) {
 	int first = 1, tempSize=0;
 	char *pEnd;
 	
-		dots = new dot*[quant]; //array to save three last dots of each graphic
-			for (int i = 0; i != quant; i++) {
-				dots[i] = new dot[3];
-			}
-
-		
+	//dots were here
+	
 	while (!ShutDown) {
 		WaitForSingleObject(parseEvent, INFINITE);
 		ShutDown = (ShutUp == TRUE); //проверяем, не установил ли родительский процесс флаг окончания
 		if (!ShutDown) {
-			//dots were here	
-		
+			
+			//dots were here
 			//копируем блок во временный char array[][]
 			 char **temp = new char*[quantOfread];
 			for (int i = 0; i != quantOfread; i++) {
@@ -300,7 +301,7 @@ DWORD WINAPI ParseThread(PVOID pvParam) {
 						}
 						else {
 							points.push_back(dots[q][1]);
-							if (k == tempSize) points.push_back(dots[q][2]);
+						//	if (k == tempSize) points.push_back(dots[q][2]);
 							dots[q][0] = dots[q][1];
 							dots[q][1] = dots[q][2];
 						}
@@ -315,15 +316,13 @@ DWORD WINAPI ParseThread(PVOID pvParam) {
 		}
 		
 	}
+	//delete dots here
 	for (int m = 0; m != quant; m++) {
 		delete[] dots[m];
 	}
 		
-//	for (int i = 0; i != quant; i++) {
-		//delete [] dots[i];
-//	}
-	
 	SetEvent(parseEnd);
+	WaitForSingleObject(parseEvent, INFINITE);
 	return(0);
 }
 
