@@ -37,9 +37,9 @@ TCHAR szPathname[MAX_PATH]; // path to the file
 int quantOfread = 0; //количество точек, считанных из файла родительским потоком
 BOOL FileEnd = FALSE; //флаг, устанавливаемый родительским процессом, свидетельствует о том, что parseThread должен приостановить свою работу
 dot **dots; // dots array at each moment containing three dots of each graphic to analize by AreInLine function 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/////////////////enter point func////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////enter point func//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int WINAPI _tWinMain(HINSTANCE hInstance,	HINSTANCE,	LPTSTR lpCmdLine,	int) {
 	InitCommonControls(); //this is to enable windows visual styles
 	MSG msg;
@@ -210,6 +210,7 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 		}
 		
 		if (feof(f_in)) FileEnd = TRUE; //если вылетели из вайла, достигнув конца файла, то поднимаем флажок конца 
+		fclose(f_in);
 		WaitForSingleObject(parseReady, INFINITE); //ждем, пока parseThread обработает наш блок
 	/////////////////////////////////////////////////////////////////
 		//а если ferror(f_in)??????????????
@@ -239,15 +240,16 @@ LRESULT CALLBACK WndGraph(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	switch (message) {
 	case WM_CREATE:
+		InvalidateRect(hWnd, &rect, TRUE);
+		UpdateWindow(hWnd);
 		break;
 
 	case WM_SIZE:
 		sx = LOWORD(lParam);
 		sy = HIWORD(lParam);
 		InvalidateRect(hWnd, NULL, TRUE);
-		//UpdateWindow(hWnd);
+		UpdateWindow(hWnd);
 		//RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
-		return 0;
 		break;
 
 	case WM_PAINT:
@@ -343,6 +345,8 @@ DWORD WINAPI ParseThread(PVOID pvParam) {
 				}
 
 				SetEvent(parseReady); //обработали весь блок, говорим родительскому потоку, что ждем от него очередную порцию
+				WaitForSingleObject(parseEvent, INFINITE);
+				ShutDown = (FileEnd == TRUE); //смотрим, не достигнут ли конец файла
 			}
 				
 		//достигнув конца файла, чистим содержимое временных структур с точками и одновременно пушим последнюю точку в результирующий файл
