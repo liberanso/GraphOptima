@@ -63,11 +63,11 @@ Purpose: Common header file containing handy macros and definitions
 //changed by Maria
 #pragma warning(disable:4996)
 //
-#pragma warning(disable:4075)
+//#pragma warning(disable:4075)
 //
-#pragma warning(disable:4127) //conditional expression is constant
+//#pragma warning(disable:4127) //conditional expression is constant
 //
-#pragma warning(disable:4189) //local variable is initialized but not referenced
+//#pragma warning(disable:4189) //local variable is initialized but not referenced
 
 ///////////////////////// Pragma message helper macro /////////////////////////
 
@@ -210,29 +210,6 @@ inline void chSETDLGICONS(HWND hwnd, int idi) {
   SendMessage(hwnd, WM_SETICON, FALSE, (LPARAM) LoadIcon((HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), MAKEINTRESOURCE(idi)));
 }
     
-
-/////////////////////////// OS Version Check Macros ///////////////////////////
-
-
-inline void chWindows9xNotAllowed() {
-   OSVERSIONINFO vi = { sizeof(vi) };
-   GetVersionEx(&vi);
-   if (vi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-      chMB("This application requires features not present in Windows 9x.");
-      ExitProcess(0);
-   }
-}
-
-
-inline void chWindows2000Required() {
-   OSVERSIONINFO vi = { sizeof(vi) };
-   GetVersionEx(&vi);
-   if ((vi.dwPlatformId != VER_PLATFORM_WIN32_NT) && (vi.dwMajorVersion < 5)) {
-      chMB("This application requires features present in Windows 2000.");
-      ExitProcess(0);
-   }
-}
-
 
 ///////////////////////////// UNICODE Check Macro /////////////////////////////
 
