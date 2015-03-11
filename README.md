@@ -4,7 +4,7 @@
 
 >файл 3sine_5pi.txt приводит к ошибкам:
 >> GraphOptima.exe has triggered a breakpoint
->> Debug error: vector subscript out of range
+>> и Debug error: vector subscript out of range
 
 Подробнее >>>>>>>>>>>>>>>> Issues
 
