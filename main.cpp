@@ -223,6 +223,7 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 		if (IsWindow(hGraph)) break; //если окошко с графиком уже существует в системе, то не пересоздаем его
 		RegisterGraphClass(); //регистрируем класс окошка с графиком
 		hGraph = CreateWindow(szGraphWndClass, _TEXT("Plot"), WS_SYSMENU | WS_POPUP | WS_VISIBLE | WS_THICKFRAME | WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, 700, 700, hwnd, 0, hInst, NULL);
+		//ShowWindow(hwnd, NULL);
 		break;
 	}
 	}
@@ -303,12 +304,14 @@ DWORD WINAPI ParseThread(PVOID pvParam) {
 						for (j = 0, k = 0; k != 2 * (1 + quant), j != 2; j++) {
 							tmp_x = strtod(temp[k], &pEnd);
 							k++;
-							for (int q = 0; q != quant; q++) {
-								tmp_y = strtod(temp[k], &pEnd);
-								k++;
-								dots[q][j].x = tmp_x;
-								dots[q][j].y = tmp_y;
-								dots[q][j].num = q;
+							if (k != 2 * (1 + quant)) {
+								for (int q = 0; q != quant; q++) {
+									tmp_y = strtod(temp[k], &pEnd);
+									k++;
+									dots[q][j].x = tmp_x;
+									dots[q][j].y = tmp_y;
+									dots[q][j].num = q;
+								}
 							}
 						}
 						first = 0; //считали первые точки, сбросили флажок
@@ -321,19 +324,21 @@ DWORD WINAPI ParseThread(PVOID pvParam) {
 					for (k; k != tempSize;) {
 						tmp_x = strtod(temp[k], &pEnd);
 						k++;
-						for (int q = 0; q != quant; q++) {
-							tmp_y = strtod(temp[k], &pEnd);
-							k++;
-							dots[q][2].x = tmp_x;
-							dots[q][2].y = tmp_y;
-							dots[q][2].num = q;
-							if (AreInLine(dots[q][0], dots[q][1], dots[q][2])) {
-								dots[q][1] = dots[q][2];
-							}
-							else {
-								points.push_back(dots[q][1]);
-								dots[q][0] = dots[q][1];
-								dots[q][1] = dots[q][2];
+						if (k != tempSize) {
+							for (int q = 0; q != quant; q++) {
+								tmp_y = strtod(temp[k], &pEnd);
+								k++;
+								dots[q][2].x = tmp_x;
+								dots[q][2].y = tmp_y;
+								dots[q][2].num = q;
+								if (AreInLine(dots[q][0], dots[q][1], dots[q][2])) {
+									dots[q][1] = dots[q][2];
+								}
+								else {
+									points.push_back(dots[q][1]);
+									dots[q][0] = dots[q][1];
+									dots[q][1] = dots[q][2];
+								}
 							}
 						}
 					}
