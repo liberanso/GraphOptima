@@ -1,10 +1,10 @@
-/*********************************************************************
+/***********************************************************************************************************************
 * 
 * Считаем, что входной файл имеет кодировку ANSI (нет проверки на 
 * Unicode/noUnicode)
 * По сути, это основной функциональный код программы
 *
-*********************************************************************/
+************************************************************************************************************************/
 #include <Windows.h> //API functions
 #include <cstdio> //printf/scanf/fscanf
 #include <cfloat> //DBL_EPSILON
@@ -13,8 +13,9 @@
 #include <cmath>
 #include <string.h>
 #include <tchar.h>
-#include <CommCtrl.h> //this and two next pragmas are to enable visual styles of windows for this app
 #include <process.h> // to access to _beginthreadex
+#include <CommCtrl.h> //this header and two next pragmas are to enable visual styles of windows for this app
+
 
 #pragma comment(linker, \
   "\"/manifestdependency:type='Win32' "\
@@ -30,13 +31,13 @@ using std::vector;
 using std::string;
 const double eps = DBL_EPSILON; //machine zero for double
 
-/////////for graphics//////////////////////////////////////////////////
-const int scaleX = 6;
-const int scaleY = 6;
+/////////for graphics////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const int scaleX = 6; //число меток на оси Х
+const int scaleY = 6; //чисто меток на оси У
 const int indent = 25; //отступ
 const int GRAPHSIZE = 1200; //размер окна в логических единицах
 const int GRAPHWIDTH = 1000; //размер рабочей области окна в лог.единицах
-//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 inline BOOL AreInLine(struct dot, struct dot, struct dot ); //алгоритм определения, лежат ли 3 точки на одной прямой,
 //основывается на уравнении прямой по двум точкам. Находится разность правой и левой частей 
@@ -48,8 +49,14 @@ void DrawPoint(HDC, struct dot, double, double, dot *, int *, HPEN, HBRUSH, doub
 //показывающих, построена ли хотя бы первая точка этого графика или нет
 
 BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot>, RECT, int, HPEN, HBRUSH, int, int, vector<string>); // окно, окно, вектор с точками, структура из оконной процедуры дочернего окна, число графиков
+//функция, вызываемая в main.cpp для рисования в дочернем pop-up окне
+
 void ProceedNames(HDC, HPEN, HBRUSH,vector<string>, int);
+//функция выводит имена графиков
+
 void DrawGrid(HDC, int, int, double, double, double, double, double, double);
+//рисует сетку
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 inline BOOL AreInLine(struct dot one, struct dot two, struct dot three) {
 	
@@ -217,3 +224,5 @@ void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y,
 	
 	DeleteObject(pengrid);
 }
+
+////////////END OF FILE/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
