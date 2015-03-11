@@ -67,6 +67,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance,	HINSTANCE,	LPTSTR lpCmdLine,	int) {
 	//ждем от дочернего потока подтверждения его завершения
 	WaitForSingleObject(parseEnd, INFINITE); //checked
 
+	if (!points.empty())points.resize(0); //clear points for plotting
+	if (!names.empty()) names.resize(0); //clear names array
 	CloseHandle(parseEvent);
 	CloseHandle(readEvent);
 	CloseHandle(parseEnd);
@@ -157,6 +159,8 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 
 	case IDC_PLOT:
 	{
+		if (!points.empty())points.resize(0); //clear points for plotting
+		if (!names.empty()) names.resize(0); //clear names array
 		GetDlgItemText(hwnd, IDC_FILENAME, szPathname, (sizeof(szPathname)/sizeof(szPathname[0])));
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		char str[20];
@@ -210,20 +214,27 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 		}
 		
 		if (feof(f_in)) FileEnd = TRUE; //если вылетели из вайла, достигнув конца файла, то поднимаем флажок конца 
+		if (!buf.empty()) buf.resize(0); //clear buf
 		fclose(f_in);
 		WaitForSingleObject(parseReady, INFINITE); //ждем, пока parseThread обработает наш блок
+
 	/////////////////////////////////////////////////////////////////
-		//а если ferror(f_in)??????????????
+		//а если ferror(f_in)?
 	/////////////////////////////////////////////////////////////////
 
 		SetEvent(parseEvent); //посылаем parseThread наш флажок конца файла
 		WaitForSingleObject(parseReady, INFINITE); //ждем, пока он на флажок посмотрит и уснет до следующего файла
-		//вообще говоря, наверное, это необязательно, но пусть пока будет
+		
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		if (IsWindow(hGraph)) break; //если окошко с графиком уже существует в системе, то не пересоздаем его
+		if (IsWindow(hGraph)) {
+			InvalidateRect(hGraph, NULL, TRUE);
+			UpdateWindow(hGraph);
+			break;
+		} //если окошко с графиком уже существует в системе, то не пересоздаем его, а просто перерисовываем
 		RegisterGraphClass(); //регистрируем класс окошка с графиком
-		hGraph = CreateWindow(szGraphWndClass, _TEXT("Plot"), WS_SYSMENU | WS_POPUP | WS_VISIBLE | WS_THICKFRAME | WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, 700, 700, hwnd, 0, hInst, NULL);
-		//ShowWindow(hwnd, NULL);
+		hGraph = CreateWindow(szGraphWndClass, _TEXT("Plot"), WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_THICKFRAME | WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, 700, 700, hwnd, 0, hInst, NULL);
+		
+		
 		break;
 	}
 	}
@@ -250,7 +261,6 @@ LRESULT CALLBACK WndGraph(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		sy = HIWORD(lParam);
 		InvalidateRect(hWnd, NULL, TRUE);
 		UpdateWindow(hWnd);
-		//RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
 		break;
 
 	case WM_PAINT:
@@ -263,6 +273,7 @@ LRESULT CALLBACK WndGraph(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		DeleteObject(hline);
 		DeleteObject(hrect);
 		if (!points.empty())points.resize(0); //clear points for plotting
+		if (!names.empty()) names.resize(0); //clear names array
 		break;
 	default: return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -354,11 +365,12 @@ DWORD WINAPI ParseThread(PVOID pvParam) {
 				ShutDown = (FileEnd == TRUE); //смотрим, не достигнут ли конец файла
 			}
 				
-		//достигнув конца файла, чистим содержимое временных структур с точками и одновременно пушим последнюю точку в результирующий файл
+		//достигнув конца файла, чистим содержимое временных структур с точками и одновременно пушим последнюю точку в результирующий вектор
 		for (int m = 0; m != quant; m++) {
 			points.push_back(dots[m][2]);
 			delete[] dots[m];
 		}
+		delete[] dots;
 
 		SetEvent(parseReady);
 		// в этом месте у нас дотс почищены, ShutDown = TRUE,
