@@ -197,7 +197,7 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 		
 		while (!feof(f_in)) {//пока не конец файла, читаем его в массив
 			int ch = 0;
-			quantOfread = ch;
+      //quantOfread = ch;
 			buf.resize(0); //затираем содержимое вектора, которое было считано из файла на прошлой итерации
 			while ((!feof(f_in)) && (ch < (50 * (quant + 1)))) { //читаем массивом по 50 точек
 
