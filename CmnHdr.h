@@ -195,6 +195,8 @@ inline void chASSERTFAIL(LPCSTR file, int line, PCSTR expr) {
 // WndProcs). This chHANDLE_DLGMSG macro corrects the problem:
 #define chHANDLE_DLGMSG(hwnd, message, fn)                 \
    case (message): return (SetDlgMsgResult(hwnd, uMsg, HANDLE_##message((hwnd), (wParam), (lParam), (fn))))
+//	chHANDLE_DLGMSG(hwnd, WM_COMMAND, Dlg_OnCommand);
+//  case WM_COMMAND: return (SetDlgMsgResult(hwnd, uMsg, HANDLE_WM_COMMAND((hwnd), (wParam), (lParam), (Dlg_OnCommand))));
 
 //////////////////////NEEEEED//////////////////////////////////////////////////
 
