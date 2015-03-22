@@ -44,14 +44,14 @@ inline BOOL AreInLine(struct dot, struct dot, struct dot ); //алгоритм �
 //полученное значение сравнивается с машинным нулем.  
 //Аргументы - три структуры с координатами х и у. 
 
-void DrawPoint(HDC, struct dot, double, double, dot *, int *, HPEN, HBRUSH, double, double, double, double, double, double,vector<string>); // аргументы: окно, где рисуется, структура с координатами точки, коэффициенты перевода
+void DrawPoint(HDC, struct dot, double, double, dot *, int *, double, double, double, double, double, double,vector<string>); // аргументы: окно, где рисуется, структура с координатами точки, коэффициенты перевода
 //координаты точки из файла на размер окна (2), указатель на массив, хранящий последнюю построенную точку для каждого графика, массив флагов,
 //показывающих, построена ли хотя бы первая точка этого графика или нет
 
-BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot>, RECT, int, HPEN, HBRUSH, int, int, vector<string>); // окно, окно, вектор с точками, структура из оконной процедуры дочернего окна, число графиков
+BOOL DrawGraphics(HDC hdc, vector<dot>, int, int, int, vector<string>); // окно, окно, вектор с точками, структура из оконной процедуры дочернего окна, число графиков
 //функция, вызываемая в main.cpp для рисования в дочернем pop-up окне
 
-void ProceedNames(HDC, HPEN, HBRUSH,vector<string>, int);
+void ProceedNames(HDC, vector<string>, int, int, int);
 //функция выводит имена графиков
 
 void DrawGrid(HDC, int, int, double, double, double, double, double, double);
@@ -71,12 +71,12 @@ inline BOOL AreInLine(struct dot one, struct dot two, struct dot three) {
 	else return (FALSE);
 }
 
-BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, HPEN pen, HBRUSH brush, int sx, int sy, vector<string> names) {
+BOOL DrawGraphics(HDC hdc, vector<dot> vec, int quantity, int sx, int sy, vector<string> names) {
 	double max_x, min_x, max_y, min_y, hx, hy;
 	double k_x = 1.0, k_y = 1.0;
 	dot *points = new dot[quantity];
 	int *flag = new int[quantity];
-
+	
 	for (int i = 0; i != quantity; i++) { //нужно для определения заполненности массива с последней точкой/ 0 - ни одной точки графика не нарисовано
 		flag[i] = 0;
 	}
@@ -93,21 +93,25 @@ BOOL DrawGraphics(HWND hWnd, HDC hdc, vector<dot> vec, RECT rect, int quantity, 
 		
 	hx = max_x - min_x;
 	hy = max_y - min_y;
+
 	
 	DrawGrid(hdc, sx, sy, max_x, min_x, max_y, min_y, hx, hy);
+	
 
 	for (vector <dot> ::iterator i = vec.begin(); i != vec.end(); i++) {
-		DrawPoint(hdc, (*i), k_x, k_y, points, flag, pen, brush, max_x, min_x, max_y, min_y, hx, hy,names);
+	DrawPoint(hdc, (*i), k_x, k_y, points, flag, max_x, min_x, max_y, min_y, hx, hy,names);
 	}
 
-	ProceedNames(hdc, pen, brush, names, quantity);
+	ProceedNames(hdc, names, quantity, sx, sy);
 
 	delete[] flag;
 	delete[] points;
+	
+
 	return (TRUE);
 }
 
-void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int *flag, HPEN pen, HBRUSH brush, double max_x, double min_x, double max_y, double min_y,double hx, double hy, vector<string> names) {
+void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int *flag, double max_x, double min_x, double max_y, double min_y,double hx, double hy, vector<string> names) {
 	
 	//рисуем точку
 	//двигаем перо в неё, рисуем линию от нее до последней нарисованной точки этого графика цветом, зависящим от номера графика, если эта точка есть
@@ -116,6 +120,8 @@ void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int 
 	
 
 ///////////////////draw the rectangle for point/////////////////////////////
+	HPEN pen;
+	HBRUSH brush;
 	pen = CreatePen(PS_DASHDOTDOT, 7, RGB(120, (11+40*point.num%243), 15));
 	//brush = CreateSolidBrush(RGB(120, (11 + 40 * point.num % 243), 15));
 	brush = CreateSolidBrush(RGB((170 * point.num % 235), (170 * point.num % 235), (170 * point.num % 235)));
@@ -124,7 +130,7 @@ void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int 
 	RECT r;
 	SetRect(&r, (int)((point.x - min_x)*GRAPHWIDTH / hx + 0.5)-5, (int)((point.y - min_y)*GRAPHWIDTH / hy + 0.5)-5, (int)((point.x - min_x)*GRAPHWIDTH / hx + 0.5)+5, (int)((point.y - min_y)*GRAPHWIDTH / hy + 0.5) + 5);
 	FillRect(hdc, &r, brush);
-	SetPixel(hdc, (int)((point.x-min_x)*GRAPHWIDTH/hx+0.5),(int) ((point.y-min_y)*GRAPHWIDTH/hy+0.5), RGB((200 * point.num %235 +20), (200 * point.num %255 +20), (200 * point.num %235+20)));
+	//SetPixel(hdc, (int)((point.x-min_x)*GRAPHWIDTH/hx+0.5),(int) ((point.y-min_y)*GRAPHWIDTH/hy+0.5), RGB((200 * point.num %235 +20), (200 * point.num %255 +20), (200 * point.num %235+20)));
 ////////////////////////////////////////////////////////////////////////////
 		
 	if (flag[point.num]) { //if there are drawn points for this graphic
@@ -138,19 +144,23 @@ void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int 
 		flag[point.num] = 1;
 	}
 		mas[point.num] = point;
-	};
+		DeleteObject(brush);
+		DeleteObject(pen);
+};
 
-void ProceedNames(HDC hdc, HPEN pen, HBRUSH brush,vector<string> names, int quantity) {
+void ProceedNames(HDC hdc, vector<string> names, int quantity, int sx, int sy) {
+	
+	HBRUSH brush=CreateSolidBrush(RGB(0,0,0));
 	for (int i = 0; i != quantity; i++) {
 		brush = CreateSolidBrush(RGB(200,10,11));
 		SelectObject(hdc, brush);
 		///////////////proceed the names////////////////////////////////////////////
 		RECT namequad;
-		SetRect(&namequad, i * 100 + 4, GRAPHWIDTH - 22, i * 100 + 28, GRAPHWIDTH - 48);
+		SetRect(&namequad, i * 100 + 4, GRAPHSIZE - 92, i * 100 + 28, GRAPHSIZE - 118);
 		FillRect(hdc, &namequad, brush);
 		brush = CreateSolidBrush(RGB((170 * i % 235), (170 * i % 235), (170 * i % 235)));
 		SelectObject(hdc, brush);
-		SetRect(&namequad, i * 100 + 8, GRAPHWIDTH - 28, i * 100 + 22, GRAPHWIDTH - 42);
+		SetRect(&namequad, i * 100 + 8, GRAPHSIZE - 98, i * 100 + 22, GRAPHSIZE - 112);
 		FillRect(hdc, &namequad, brush);
 		SetTextAlign(hdc, TA_LEFT | TA_TOP);
 		
@@ -158,18 +168,21 @@ void ProceedNames(HDC hdc, HPEN pen, HBRUSH brush,vector<string> names, int quan
 		std::mbstowcs(des, names[i].c_str(), names[i].length());
 		LPCWSTR lpcwstr = des;
 		////////////////////////////////////////////////////////////////////////////
-		TextOut(hdc, (int)i * 100 + 30, (int)(GRAPHWIDTH - 35), lpcwstr, names[i].length());
+		TextOut(hdc, (int)i * 100 + 30, (int)(GRAPHSIZE - 105), lpcwstr, names[i].length());
 	}
+	DeleteObject(brush);
 }
 
 void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y, double min_y, double hx, double hy) {
 	HPEN pengrid;
 	pengrid= CreatePen(PS_DASH, 3, RGB(120, 30, 50));
 	SelectObject(hdc,pengrid);
+
 	SetMapMode(hdc, MM_ANISOTROPIC);
-	SetWindowExtEx(hdc, GRAPHSIZE, -GRAPHSIZE, NULL);
-	SetViewportExtEx(hdc, sx, sy, NULL);
-	SetViewportOrgEx(hdc, 3 * indent, sy - indent, NULL);
+	SetWindowExtEx(hdc, GRAPHSIZE, -GRAPHSIZE, NULL); //window 1200x1200 logical units
+	SetViewportExtEx(hdc, sx, sy, NULL); //sx x sy client area in device units
+	SetViewportOrgEx(hdc, 3*indent, sy-indent , NULL); //function specifies which window point maps to the viewport origin (0,0) in device units
+
 	SetTextAlign(hdc, TA_CENTER | TA_TOP);
 	int x_gr, y_gr, i;
 	TCHAR s[20];
@@ -191,7 +204,7 @@ void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y,
 	for (grid_x = min_x, i = 0; i <= scaleX; grid_x += hx / scaleX, i++) {
 		x_gr = (int)((grid_x - min_x)*GRAPHWIDTH / (max_x - min_x) + 0.5);
 		_stprintf(s, _TEXT("%.1le"), grid_x);
-		TextOut(hdc, x_gr, 0, s, _tcsclen(s));
+		TextOut(hdc, x_gr, -5, s, _tcsclen(s));
 		pengrid = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
 		SelectObject(hdc, pengrid);
 		MoveToEx(hdc, x_gr, -10, NULL);
@@ -208,7 +221,7 @@ void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y,
 	for (grid_y = min_y, i = 0; i <= scaleY; grid_y += hy / scaleY, i++) {
 		y_gr = (int)((grid_y - min_y)*GRAPHWIDTH / (max_y - min_y) + 0.5);
 		_stprintf(s, _TEXT("%.1le"), grid_y);
-		TextOut(hdc, 0, y_gr, s, _tcsclen(s));
+		TextOut(hdc, -5, y_gr, s, _tcsclen(s));
 		pengrid = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
 		SelectObject(hdc, pengrid);
 		MoveToEx(hdc, -10, y_gr, NULL);
