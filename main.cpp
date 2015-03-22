@@ -3,6 +3,7 @@ Version: 3.0.1
 Author: Mariya Zapletina
 Noticies: 09/03/15
 **************************************************************************************************************************************************************/
+
 #include "resource.h"
 #include "CmnHdr.h"
 #include "Func.h"
@@ -40,7 +41,7 @@ dot **dots; // dots array at each moment containing three dots of each graphic t
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////enter point func//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int WINAPI _tWinMain(HINSTANCE hInstance,	HINSTANCE,	LPTSTR lpCmdLine,	int) {
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR lpCmdLine, int) {
 	InitCommonControls(); //this is to enable windows visual styles
 	MSG msg;
 
@@ -50,7 +51,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance,	HINSTANCE,	LPTSTR lpCmdLine,	int) {
 	//for the first time is set automatically at the beginning of parseThread
 	parseEnd = CreateEvent(NULL, FALSE, FALSE, NULL); // means initially parseThread is working, is set by parseThread before it returns(0)
 	readEvent = CreateEvent(NULL, FALSE, FALSE, NULL); // means that parseThread copied the block and main thread can read another one
-	
+
 
 	DWORD dwThreadID;
 	HANDLE parseThread = _mbeginthreadex(NULL, 0, ParseThread, NULL, 0, &dwThreadID);
@@ -75,7 +76,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance,	HINSTANCE,	LPTSTR lpCmdLine,	int) {
 	CloseHandle(parseReady);
 	CloseHandle(parseThread);
 	return (0);
-} 
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ATOM RegisterGraphClass() {
@@ -101,9 +102,9 @@ INT_PTR WINAPI MainDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 		break;
 	case WM_CLOSE: //Dlg_OnClose(hWnd);
 		return (SetDlgMsgResult(hWnd, uMsg, HANDLE_WM_CLOSE(hWnd, wParam, lParam, Dlg_OnClose)));
-	case WM_DESTROY: PostQuitMessage(0); return(FALSE); 
+	case WM_DESTROY: PostQuitMessage(0); return(FALSE);
 		break;
-	//default: return (FALSE);
+		//default: return (FALSE);
 	}
 	return(FALSE);
 }
@@ -161,7 +162,7 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 	{
 		if (!points.empty())points.resize(0); //clear points for plotting
 		if (!names.empty()) names.resize(0); //clear names array
-		GetDlgItemText(hwnd, IDC_FILENAME, szPathname, (sizeof(szPathname)/sizeof(szPathname[0])));
+		GetDlgItemText(hwnd, IDC_FILENAME, szPathname, (sizeof(szPathname) / sizeof(szPathname[0])));
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		char str[20];
 		FileEnd = FALSE; //как только мы нажали на кнопку Построить, конец файла не достигнут
@@ -194,14 +195,14 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 		STOPREADPARSE = FALSE; //прочитали число графиков из файла, их названия, создали структуру под точки - говорим дочернему потоку, мол, можно готовиться к чтению
 		SetEvent(parseReady);// тут же говорим, что parseThread может принимать массив (это самое начало, файл только загрузили, parseThread должен быть свободен всё равно
 
-		
+
 		while (!feof(f_in)) {//пока не конец файла, читаем его в массив
 			int ch = 0;
-      //quantOfread = ch;
+			quantOfread = ch;
 			buf.resize(0); //затираем содержимое вектора, которое было считано из файла на прошлой итерации
 			while ((!feof(f_in)) && (ch < (50 * (quant + 1)))) { //читаем массивом по 50 точек
 
-				if ((fscanf(f_in, "%s", str) != 0)&&(!feof(f_in)&&(!ferror(f_in)))) {
+				if ((fscanf(f_in, "%s", str) != 0) && (!feof(f_in) && (!ferror(f_in)))) {
 					buf.push_back(str);
 					ch++;
 					quantOfread = ch;
@@ -213,19 +214,19 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 			SetEvent(parseEvent); //поднимает флажок, мол, мэйн поток считал кусок файла, parseThread, принимай
 			WaitForSingleObject(readEvent, INFINITE); //ждем, пока дочерний поток скопирует блок
 		}
-		
+
 		if (feof(f_in)) FileEnd = TRUE; //если вылетели из вайла, достигнув конца файла, то поднимаем флажок конца 
 		if (!buf.empty()) buf.resize(0); //clear buf
 		fclose(f_in);
 		WaitForSingleObject(parseReady, INFINITE); //ждем, пока parseThread обработает наш блок
 
-	/////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////
 		//а если ferror(f_in)?
-	/////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////
 
 		SetEvent(parseEvent); //посылаем parseThread наш флажок конца файла
 		WaitForSingleObject(parseReady, INFINITE); //ждем, пока он на флажок посмотрит и уснет до следующего файла
-		
+
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if (IsWindow(hGraph)) {
 			InvalidateRect(hGraph, NULL, TRUE);
@@ -233,9 +234,7 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 			break;
 		} //если окошко с графиком уже существует в системе, то не пересоздаем его, а просто перерисовываем
 		RegisterGraphClass(); //регистрируем класс окошка с графиком
-		hGraph = CreateWindow(szGraphWndClass, _TEXT("Plot"), WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_THICKFRAME | WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, 700, 700, hwnd, 0, hInst, NULL);
-		
-		
+		hGraph = CreateWindow(szGraphWndClass, _TEXT("Plot"), WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_SIZEBOX | WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, 700, 700, hwnd, 0, hInst, NULL);
 		break;
 	}
 	}
@@ -243,46 +242,79 @@ void Dlg_OnCommand(HWND hwnd, int id, HWND hwndCtrl, UINT CodeNotify) { //гла
 
 LRESULT CALLBACK WndGraph(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	PAINTSTRUCT ps;
-	HDC hdc;
-	RECT rect;
-	static HPEN hline;
-	static HBRUSH hrect;
+	static HDC hdc; //display context
+	static HDC hMemDC;//compatible context
 	static int sx, sy;
-
-	GetClientRect(hWnd, &rect);
-
+	RECT rect;
+	
 	switch (message) {
-	case WM_CREATE:
-		InvalidateRect(hWnd, &rect, TRUE);
-		UpdateWindow(hWnd);
+		
+	case WM_CREATE: {
+		GetClientRect(hWnd, &rect);
+		sx = rect.right;
+		sy = rect.bottom;
+	}
 		break;
 
-	case WM_SIZE:
+	case WM_ERASEBKGND:
+		return TRUE;
+
+	case WM_SIZING: 
+	case WM_SIZE: {
 		sx = LOWORD(lParam);
 		sy = HIWORD(lParam);
-		InvalidateRect(hWnd, NULL, TRUE);
 		UpdateWindow(hWnd);
+		} 
 		break;
 
-	case WM_PAINT:
+	case WM_PAINT: {
+				
 		hdc = BeginPaint(hWnd, &ps);
-		DrawGraphics(hWnd, hdc, points, rect, quant, hline, hrect, sx, sy, names);
-		EndPaint(hWnd, &ps);
-		break;
+		GetClientRect(hWnd, &rect);
+		hMemDC = CreateCompatibleDC(hdc);
+
+		HBITMAP hScreen;
+		HBITMAP oldBmp;
+		hScreen = CreateCompatibleBitmap(hdc, sx, sy);
+		oldBmp = (HBITMAP)SelectObject(hMemDC, hScreen);
+
+		//закраска фоновым цветом
+		LOGBRUSH br;
+		br.lbStyle = BS_SOLID;
+		br.lbColor = 0xCCCCFF;
+		HBRUSH bkgrdbr = CreateBrushIndirect(&br);
+		SelectObject(hMemDC, bkgrdbr); //?
+		FillRect(hMemDC, &rect, bkgrdbr);
+		DeleteObject(bkgrdbr);
+		
+		SetMapMode(hdc, MM_ANISOTROPIC);
+		SetWindowExtEx(hdc, GRAPHSIZE, -GRAPHSIZE, NULL); //window 1200x1200 logical units
+		SetViewportExtEx(hdc, sx, sy, NULL); //sx x sy client area in device units
+		SetViewportOrgEx(hdc, 0, sy, NULL); //function specifies which window point maps to the viewport origin (0,0). in device units
+		
+		DrawGraphics(hMemDC, points, quant, sx, sy, names);
 	
-	case WM_DESTROY:
-		DeleteObject(hline);
-		DeleteObject(hrect);
+		//copy an image to the screen
+		SetStretchBltMode(hdc, COLORONCOLOR);
+		BitBlt(hdc, 0, 0, GRAPHSIZE, GRAPHSIZE, hMemDC, -((GRAPHSIZE / sx) * 5 * indent), -((GRAPHSIZE / sy) * 2 * indent), SRCCOPY);
+		SelectObject(hMemDC, oldBmp);
+		DeleteObject(hScreen);
+		DeleteDC(hMemDC);
+		
+		EndPaint(hWnd, &ps);
+	} break;
+
+	case WM_DESTROY: {
+		DeleteDC(hdc);
 		if (!points.empty())points.resize(0); //clear points for plotting
 		if (!names.empty()) names.resize(0); //clear names array
-		break;
-	default: return DefWindowProc(hWnd, message, wParam, lParam);
+	} break;
 	}
-	return 0;
+	return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 DWORD WINAPI ParseThread(PVOID pvParam) {
-	
+
 	WaitForSingleObject(parseEvent, INFINITE); //ждем, пока мэйн поток считает кусок файла и разрешит нам его копировать
 	while (!STOPREADPARSE) { //если не поднят флажок конца работы
 		BOOL ShutDown = (FileEnd == TRUE); //смотрим, не достигнут ли конец файла
@@ -292,80 +324,80 @@ DWORD WINAPI ParseThread(PVOID pvParam) {
 		char *pEnd;
 
 		while (!ShutDown) { //если не конец файла
-			
-				//создаем временный char array[][] для блока, пришедшего из мэйн потока
-				char **temp = new char*[quantOfread];
-				for (int i = 0; i != quantOfread; i++) {
-					temp[i] = new char[20];
-				}
 
-				//копируем блок во временный char array[][]
-				for (int i = 0; i != quantOfread; i++) {
-					strncpy(temp[i], buf[i].c_str(), 20);
-				}
+			//создаем временный char array[][] для блока, пришедшего из мэйн потока
+			char **temp = new char*[quantOfread];
+			for (int i = 0; i != quantOfread; i++) {
+				temp[i] = new char[20];
+			}
 
-				tempSize = quantOfread; //пишем размер считанного блока во внутренню переменную, потому что quantOfread может измениться в мэйн потоке,
-				//пока тут будет предыдущий блок файла обрабатываться здесь
-								
-				SetEvent(readEvent); //говорим мэйн потоку, что он может читать следующий кусок файла				
+			//копируем блок во временный char array[][]
+			for (int i = 0; i != quantOfread; i++) {
+				strncpy(temp[i], buf[i].c_str(), 20);
+			}
 
-				//обрабатываем скопированный блок
-				int k = 0, j = 0;
-				if (first) { //читаем по 2 первые точки в каждый график
-					if ((tempSize - 3 * (1 + quant)) >= 0) { //проверяем, что хотя бы по 3 точки каждого графика в файле присутствуют
-						for (j = 0, k = 0; k != 2 * (1 + quant), j != 2; j++) {
-							tmp_x = strtod(temp[k], &pEnd);
-							k++;
-							if (k != 2 * (1 + quant)) {
-								for (int q = 0; q != quant; q++) {
-									tmp_y = strtod(temp[k], &pEnd);
-									k++;
-									dots[q][j].x = tmp_x;
-									dots[q][j].y = tmp_y;
-									dots[q][j].num = q;
-								}
-							}
-						}
-						first = 0; //считали первые точки, сбросили флажок
-						k = 2 * (1 + quant);
-						for (int q = 0; q != quant; q++) points.push_back(dots[q][0]); //забили первую точку каждого графика в результирующий массив
-					} 
-					else chMB("Файл слишком короткий! Проверьте содержимое файла."); //если в файле было меньше 3 точек на каждый график
-				}
-				if (!first) {
-					for (k; k != tempSize;) {
+			tempSize = quantOfread; //пишем размер считанного блока во внутренню переменную, потому что quantOfread может измениться в мэйн потоке,
+			//пока тут будет предыдущий блок файла обрабатываться здесь
+
+			SetEvent(readEvent); //говорим мэйн потоку, что он может читать следующий кусок файла				
+
+			//обрабатываем скопированный блок
+			int k = 0, j = 0;
+			if (first) { //читаем по 2 первые точки в каждый график
+				if ((tempSize - 3 * (1 + quant)) >= 0) { //проверяем, что хотя бы по 3 точки каждого графика в файле присутствуют
+					for (j = 0, k = 0; k != 2 * (1 + quant), j != 2; j++) {
 						tmp_x = strtod(temp[k], &pEnd);
 						k++;
-						if (k != tempSize) {
+						if (k != 2 * (1 + quant)) {
 							for (int q = 0; q != quant; q++) {
 								tmp_y = strtod(temp[k], &pEnd);
 								k++;
-								dots[q][2].x = tmp_x;
-								dots[q][2].y = tmp_y;
-								dots[q][2].num = q;
-								if (AreInLine(dots[q][0], dots[q][1], dots[q][2])) {
-									dots[q][1] = dots[q][2];
-								}
-								else {
-									points.push_back(dots[q][1]);
-									dots[q][0] = dots[q][1];
-									dots[q][1] = dots[q][2];
-								}
+								dots[q][j].x = tmp_x;
+								dots[q][j].y = tmp_y;
+								dots[q][j].num = q;
+							}
+						}
+					}
+					first = 0; //считали первые точки, сбросили флажок
+					k = 2 * (1 + quant);
+					for (int q = 0; q != quant; q++) points.push_back(dots[q][0]); //забили первую точку каждого графика в результирующий массив
+				}
+				else chMB("Файл слишком короткий! Проверьте содержимое файла."); //если в файле было меньше 3 точек на каждый график
+			}
+			if (!first) {
+				for (k; k != tempSize;) {
+					tmp_x = strtod(temp[k], &pEnd);
+					k++;
+					if (k != tempSize) {
+						for (int q = 0; q != quant; q++) {
+							tmp_y = strtod(temp[k], &pEnd);
+							k++;
+							dots[q][2].x = tmp_x;
+							dots[q][2].y = tmp_y;
+							dots[q][2].num = q;
+							if (AreInLine(dots[q][0], dots[q][1], dots[q][2])) {
+								dots[q][1] = dots[q][2];
+							}
+							else {
+								points.push_back(dots[q][1]);
+								dots[q][0] = dots[q][1];
+								dots[q][1] = dots[q][2];
 							}
 						}
 					}
 				}
-				
-				//считали блок, чистим наш временный char array[][], чтобы на следующей итерации в нем не было мусора
-				for (int l = 0; l != tempSize; l++) {
-					delete[]temp[l];
-				}
-
-				SetEvent(parseReady); //обработали весь блок, говорим родительскому потоку, что ждем от него очередную порцию
-				WaitForSingleObject(parseEvent, INFINITE);
-				ShutDown = (FileEnd == TRUE); //смотрим, не достигнут ли конец файла
 			}
-				
+
+			//считали блок, чистим наш временный char array[][], чтобы на следующей итерации в нем не было мусора
+			for (int l = 0; l != tempSize; l++) {
+				delete[]temp[l];
+			}
+
+			SetEvent(parseReady); //обработали весь блок, говорим родительскому потоку, что ждем от него очередную порцию
+			WaitForSingleObject(parseEvent, INFINITE);
+			ShutDown = (FileEnd == TRUE); //смотрим, не достигнут ли конец файла
+		}
+
 		//достигнув конца файла, чистим содержимое временных структур с точками и одновременно пушим последнюю точку в результирующий вектор
 		for (int m = 0; m != quant; m++) {
 			points.push_back(dots[m][2]);
@@ -384,3 +416,5 @@ DWORD WINAPI ParseThread(PVOID pvParam) {
 	SetEvent(parseEnd); //этого ивента от нас при закрытии ждет мэйн поток
 	return(0);
 }
+
+
