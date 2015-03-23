@@ -98,11 +98,11 @@ BOOL DrawGraphics(HDC hdc, vector<dot> vec, int quantity, int sx, int sy, vector
 	DrawGrid(hdc, sx, sy, max_x, min_x, max_y, min_y, hx, hy);
 	
 
-	//for (vector <dot> ::iterator i = vec.begin(); i != vec.end(); i++) {
-	//DrawPoint(hdc, (*i), k_x, k_y, points, flag, max_x, min_x, max_y, min_y, hx, hy,names);
-	//}
+	for (vector <dot> ::iterator i = vec.begin(); i != vec.end(); i++) {
+	DrawPoint(hdc, (*i), k_x, k_y, points, flag, max_x, min_x, max_y, min_y, hx, hy,names);
+	}
 
-	//ProceedNames(hdc, names, quantity, sx, sy);
+	ProceedNames(hdc, names, quantity, sx, sy);
 
 	delete[] flag;
 	delete[] points;
@@ -119,47 +119,55 @@ void DrawPoint(HDC hdc, struct dot point, double k_x, double k_y, dot *mas, int 
 	//flag=0, если ни одной точки этого графика ещё не было нарисовано
 	
 
-///////////////////draw the rectangle for point/////////////////////////////
-	HPEN pen;
-	HBRUSH brush;
+///////////////////draw the rectangle for point////////////////////////////////////////////////////////////////////////////////////////////////////
+	HPEN pen, oldpen;
+	HBRUSH brush, oldbrush;
 	pen = CreatePen(PS_DASHDOTDOT, 7, RGB(120, (11+40*point.num%243), 15));
-	//brush = CreateSolidBrush(RGB(120, (11 + 40 * point.num % 243), 15));
 	brush = CreateSolidBrush(RGB((170 * point.num % 235), (170 * point.num % 235), (170 * point.num % 235)));
-	SelectObject(hdc, pen);
-	SelectObject(hdc, brush);
+	
+	oldpen=(HPEN)SelectObject(hdc, pen);
+	oldbrush=(HBRUSH)SelectObject(hdc, brush);
 	RECT r;
 	SetRect(&r, (int)((point.x - min_x)*GRAPHWIDTH / hx + 0.5)-5, (int)((point.y - min_y)*GRAPHWIDTH / hy + 0.5)-5, (int)((point.x - min_x)*GRAPHWIDTH / hx + 0.5)+5, (int)((point.y - min_y)*GRAPHWIDTH / hy + 0.5) + 5);
 	FillRect(hdc, &r, brush);
-	//SetPixel(hdc, (int)((point.x-min_x)*GRAPHWIDTH/hx+0.5),(int) ((point.y-min_y)*GRAPHWIDTH/hy+0.5), RGB((200 * point.num %235 +20), (200 * point.num %255 +20), (200 * point.num %235+20)));
-////////////////////////////////////////////////////////////////////////////
+	SelectObject(hdc, oldpen);
+	DeleteObject(pen);
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 	if (flag[point.num]) { //if there are drawn points for this graphic
 		pen = CreatePen(((point.num) % 4), 3, RGB((170 * point.num %235), (170 * point.num %235), (170 * point.num %235)));
-		SelectObject(hdc, pen);
-		SelectObject(hdc, brush);
+		oldpen=(HPEN)SelectObject(hdc, pen);
 		MoveToEx(hdc, (int)((mas[point.num].x - min_x)*GRAPHWIDTH/hx+0.5), (int) ((mas[point.num].y - min_y)*GRAPHWIDTH/hy+0.5), NULL);
 		LineTo(hdc, (int) ((point.x-min_x)*GRAPHWIDTH/hx+0.5), (int) ((point.y-min_y)*GRAPHWIDTH/hy+0.5));
+		SelectObject(hdc, oldpen);
+		DeleteObject(pen);
 	}
 	else {
 		flag[point.num] = 1;
 	}
 		mas[point.num] = point;
+		SelectObject(hdc, oldpen);
+		SelectObject(hdc, oldbrush);
 		DeleteObject(brush);
 		DeleteObject(pen);
 };
 
 void ProceedNames(HDC hdc, vector<string> names, int quantity, int sx, int sy) {
 	
-	HBRUSH brush=CreateSolidBrush(RGB(0,0,0));
+	HBRUSH brush=0, oldbrush=0;
+		
 	for (int i = 0; i != quantity; i++) {
 		brush = CreateSolidBrush(RGB(200,10,11));
-		SelectObject(hdc, brush);
+		oldbrush=(HBRUSH)SelectObject(hdc, brush);
 		///////////////proceed the names////////////////////////////////////////////
 		RECT namequad;
 		SetRect(&namequad, i * 100 + 4, GRAPHSIZE - 92, i * 100 + 28, GRAPHSIZE - 118);
 		FillRect(hdc, &namequad, brush);
+		SelectObject(hdc, oldbrush);
+		DeleteObject(brush);
 		brush = CreateSolidBrush(RGB((170 * i % 235), (170 * i % 235), (170 * i % 235)));
-		SelectObject(hdc, brush);
+		oldbrush=(HBRUSH)SelectObject(hdc, brush);
 		SetRect(&namequad, i * 100 + 8, GRAPHSIZE - 98, i * 100 + 22, GRAPHSIZE - 112);
 		FillRect(hdc, &namequad, brush);
 		SetTextAlign(hdc, TA_LEFT | TA_TOP);
@@ -169,8 +177,9 @@ void ProceedNames(HDC hdc, vector<string> names, int quantity, int sx, int sy) {
 		LPCWSTR lpcwstr = des;
 		////////////////////////////////////////////////////////////////////////////
 		TextOut(hdc, (int)i * 100 + 30, (int)(GRAPHSIZE - 105), lpcwstr, names[i].length());
+		SelectObject(hdc, oldbrush);
+		DeleteObject(brush);
 	}
-	DeleteObject(brush);
 }
 
 void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y, double min_y, double hx, double hy) {
@@ -179,7 +188,7 @@ void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y,
 	pengrid_one= CreatePen(PS_SOLID, 1, RGB(120, 30, 50));
 	pengrid_two = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
 	pengrid_dash = CreatePen(PS_DASH, 1, RGB(120, 30, 50));
-	oldpen = (HPEN)SelectObject(hdc,pengrid_one);
+	
 
 	SetMapMode(hdc, MM_ANISOTROPIC);
 	SetWindowExtEx(hdc, GRAPHSIZE, -GRAPHSIZE, NULL); //window 1200x1200 logical units
@@ -194,6 +203,7 @@ void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y,
 	TCHAR s[20];
 	double grid_x, grid_y;
 	
+	oldpen = (HPEN)SelectObject(hdc, pengrid_one);
 	for (grid_x = min_x, i = 0; i <= 5 * scaleX; grid_x += hx / (5 * scaleX), i++) {
 		x_gr = (int)((grid_x - min_x)*GRAPHWIDTH / (max_x - min_x) + 0.5);
 		MoveToEx(hdc, x_gr, 0, NULL);
@@ -205,7 +215,6 @@ void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y,
 		LineTo(hdc, GRAPHWIDTH, y_gr);
 	}
 	SelectObject(hdc, oldpen);
-	DeleteObject(pengrid_one);
 	
 	for (grid_x = min_x, i = 0; i <= scaleX; grid_x += hx / scaleX, i++) {
 		x_gr = (int)((grid_x - min_x)*GRAPHWIDTH / (max_x - min_x) + 0.5);
@@ -222,6 +231,7 @@ void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y,
 	LineTo(hdc, GRAPHWIDTH, 0);
 	SetTextAlign(hdc, TA_RIGHT | TA_BOTTOM);
 	
+	SelectObject(hdc, oldpen);
 	for (grid_y = min_y+hy/scaleY, i = 0; i <= scaleY; grid_y += hy / scaleY, i++) {
 		y_gr = (int)((grid_y - min_y)*GRAPHWIDTH / (max_y - min_y) + 0.5);
 		_stprintf(s, _TEXT("%.1le"), grid_y);
@@ -242,6 +252,4 @@ void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y,
 	DeleteObject(pengrid_dash);
 
 }
-
-
 ////////////END OF FILE/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
