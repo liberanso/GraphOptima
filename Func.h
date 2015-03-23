@@ -98,11 +98,11 @@ BOOL DrawGraphics(HDC hdc, vector<dot> vec, int quantity, int sx, int sy, vector
 	DrawGrid(hdc, sx, sy, max_x, min_x, max_y, min_y, hx, hy);
 	
 
-	for (vector <dot> ::iterator i = vec.begin(); i != vec.end(); i++) {
-	DrawPoint(hdc, (*i), k_x, k_y, points, flag, max_x, min_x, max_y, min_y, hx, hy,names);
-	}
+	//for (vector <dot> ::iterator i = vec.begin(); i != vec.end(); i++) {
+	//DrawPoint(hdc, (*i), k_x, k_y, points, flag, max_x, min_x, max_y, min_y, hx, hy,names);
+	//}
 
-	ProceedNames(hdc, names, quantity, sx, sy);
+	//ProceedNames(hdc, names, quantity, sx, sy);
 
 	delete[] flag;
 	delete[] points;
@@ -174,68 +174,74 @@ void ProceedNames(HDC hdc, vector<string> names, int quantity, int sx, int sy) {
 }
 
 void DrawGrid(HDC hdc, int sx, int sy, double max_x, double min_x, double max_y, double min_y, double hx, double hy) {
-	HPEN pengrid;
-	pengrid= CreatePen(PS_DASH, 3, RGB(120, 30, 50));
-	SelectObject(hdc,pengrid);
+	HPEN pengrid_one, pengrid_two, pengrid_dash,oldpen;
+	SIZE textSize;
+	pengrid_one= CreatePen(PS_SOLID, 1, RGB(120, 30, 50));
+	pengrid_two = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
+	pengrid_dash = CreatePen(PS_DASH, 1, RGB(120, 30, 50));
+	oldpen = (HPEN)SelectObject(hdc,pengrid_one);
 
 	SetMapMode(hdc, MM_ANISOTROPIC);
 	SetWindowExtEx(hdc, GRAPHSIZE, -GRAPHSIZE, NULL); //window 1200x1200 logical units
+	GetTextExtentPoint32(hdc, _TEXT("0.0e+007"), _tcslen(_TEXT("0.0e+007")), &textSize);
+//	int width_intent = textSize.cx;
+//	int height_intent = textSize.cy;
 	SetViewportExtEx(hdc, sx, sy, NULL); //sx x sy client area in device units
-	SetViewportOrgEx(hdc, 3*indent, sy-indent , NULL); //function specifies which window point maps to the viewport origin (0,0) in device units
-
+	SetViewportOrgEx(hdc, 3*indent,  sy-indent , NULL); //function specifies which window point maps to the viewport origin (0,0) in device units
+	
 	SetTextAlign(hdc, TA_CENTER | TA_TOP);
 	int x_gr, y_gr, i;
 	TCHAR s[20];
 	double grid_x, grid_y;
-	for (grid_x = min_x, i = 0; i <= 5*scaleX; grid_x += hx / (5*scaleX), i++) {
+	
+	for (grid_x = min_x, i = 0; i <= 5 * scaleX; grid_x += hx / (5 * scaleX), i++) {
 		x_gr = (int)((grid_x - min_x)*GRAPHWIDTH / (max_x - min_x) + 0.5);
-		pengrid = CreatePen(PS_SOLID, 1, RGB(120, 30, 50));
-		SelectObject(hdc, pengrid);
 		MoveToEx(hdc, x_gr, 0, NULL);
 		LineTo(hdc, x_gr, GRAPHWIDTH);
 	}
 	for (grid_y = min_y, i = 0; i <= 5 * scaleY; grid_y += hy / (5 * scaleY), i++) {
 		y_gr = (int)((grid_y - min_y)*GRAPHWIDTH / (max_y - min_y) + 0.5);
-		pengrid = CreatePen(PS_SOLID, 1, RGB(120, 30, 50));
-		SelectObject(hdc, pengrid);
 		MoveToEx(hdc, 0, y_gr, NULL);
 		LineTo(hdc, GRAPHWIDTH, y_gr);
 	}
+	SelectObject(hdc, oldpen);
+	DeleteObject(pengrid_one);
+	
 	for (grid_x = min_x, i = 0; i <= scaleX; grid_x += hx / scaleX, i++) {
 		x_gr = (int)((grid_x - min_x)*GRAPHWIDTH / (max_x - min_x) + 0.5);
 		_stprintf(s, _TEXT("%.1le"), grid_x);
 		TextOut(hdc, x_gr, -5, s, _tcsclen(s));
-		pengrid = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
-		SelectObject(hdc, pengrid);
+		oldpen = (HPEN)SelectObject(hdc, pengrid_one);
 		MoveToEx(hdc, x_gr, -10, NULL);
 		LineTo(hdc, x_gr, 10);
-		pengrid = CreatePen(PS_DASH, 1, RGB(120, 30, 50));
-		SelectObject(hdc, pengrid);
+		oldpen = (HPEN)SelectObject(hdc, pengrid_dash);
 		LineTo(hdc, x_gr, GRAPHWIDTH);
 	}
-	pengrid = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
-	SelectObject(hdc, pengrid);
+	oldpen = (HPEN)SelectObject(hdc, pengrid_two);
 	MoveToEx(hdc, 0, 0, NULL);
 	LineTo(hdc, GRAPHWIDTH, 0);
 	SetTextAlign(hdc, TA_RIGHT | TA_BOTTOM);
-	for (grid_y = min_y, i = 0; i <= scaleY; grid_y += hy / scaleY, i++) {
+	
+	for (grid_y = min_y+hy/scaleY, i = 0; i <= scaleY; grid_y += hy / scaleY, i++) {
 		y_gr = (int)((grid_y - min_y)*GRAPHWIDTH / (max_y - min_y) + 0.5);
 		_stprintf(s, _TEXT("%.1le"), grid_y);
 		TextOut(hdc, -5, y_gr, s, _tcsclen(s));
-		pengrid = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
-		SelectObject(hdc, pengrid);
+		
+		oldpen = (HPEN)SelectObject(hdc, pengrid_two);
 		MoveToEx(hdc, -10, y_gr, NULL);
 		LineTo(hdc, 10, y_gr);
-		pengrid = CreatePen(PS_DASH, 1, RGB(120, 30, 50));
-		SelectObject(hdc, pengrid);
+		oldpen = (HPEN)SelectObject(hdc, pengrid_dash);
 		LineTo(hdc, GRAPHWIDTH, y_gr);
 	}
-	pengrid = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
-	SelectObject(hdc, pengrid);
+	oldpen = (HPEN)SelectObject(hdc, pengrid_two);
 	MoveToEx(hdc, 0, 0, NULL);
 	LineTo(hdc, 0, GRAPHWIDTH);
-	
-	DeleteObject(pengrid);
+	SelectObject(hdc, oldpen);
+	DeleteObject(pengrid_two);
+	DeleteObject(pengrid_one);
+	DeleteObject(pengrid_dash);
+
 }
+
 
 ////////////END OF FILE/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
